@@ -104,7 +104,7 @@
 				<version>8.1.5</version>
 				<configuration>
 
-					<mainClass>com.sirolf2009.zkeditor.MainApp</mainClass>
+					<mainClass>com.sirolf2009.zkeditor.ZKEditor</mainClass>
 
 					<!-- only required if signing the jar file -->
 					<keyStoreAlias>example-user</keyStoreAlias>
