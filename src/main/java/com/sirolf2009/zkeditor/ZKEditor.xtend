@@ -39,7 +39,7 @@ class ZKEditor extends Application {
 	}
 
 	override start(Stage primaryStage) throws Exception {
-		val zookeeper = connect(#["localhost:2181"])
+		val zookeeper = connect(#[promptForIP().orElseThrow[new RuntimeException("I need an IP to connect with")]])
 
 		val path = new TextField()
 		path.setEditable(false)
@@ -107,12 +107,20 @@ class ZKEditor extends Application {
 		val splitPane = new SplitPane(treeview, new VBox(path, textArea, tools))
 
 		val scene = new Scene(splitPane, 1200, 600)
-		primaryStage.setOnCloseRequest[
+		primaryStage.setOnCloseRequest [
 			zookeeper.close()
 			System.exit(0)
 		]
 		primaryStage.setScene(scene)
 		primaryStage.show()
+	}
+
+	def promptForIP() {
+		val dialog = new TextInputDialog("localhost:2181") => [
+			setTitle("Connect")
+			setHeaderText("Please enter an ip to connect with")
+		]
+		dialog.showAndWait()
 	}
 
 	def private static Optional<ZKNode> getParent(ZKNode root, ZKNode child) {
@@ -122,7 +130,7 @@ class ZKEditor extends Application {
 		val node = new AtomicReference(root)
 		while(segments.size() > 0) {
 			val now = node.get()
-			node.get().getChildren().forEach[
+			node.get().getChildren().forEach [
 				if(name.equals(segments.peek())) {
 					parent.set(node.get())
 					node.set(it)
