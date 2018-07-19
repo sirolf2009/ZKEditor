@@ -1,5 +1,6 @@
 package com.sirolf2009.zkeditor
 
+import javafx.geometry.Orientation
 import javafx.scene.control.Button
 import javafx.scene.control.ButtonBar
 import javafx.scene.control.SplitPane
@@ -12,6 +13,7 @@ import org.apache.zookeeper.ZooKeeper
 class ZKEditor extends SplitPane {
 	
 	new(ZooKeeper zookeeper) {
+		orientation = Orientation.HORIZONTAL
 		val path = new TextField()
 		path.setEditable(false)
 		val textArea = new TextArea()
@@ -39,8 +41,10 @@ class ZKEditor extends SplitPane {
 					textArea.setText(new String(it))
 				]
 			]
+			setStyle("-fx-background-color: red;")
 		]
-		getChildren().addAll(treeview, new VBox(path, textArea, tools))
+		getItems().add(treeview)
+		getItems().add(new VBox(path, textArea, tools))
 	}
 	
 }
