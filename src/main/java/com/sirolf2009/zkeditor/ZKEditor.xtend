@@ -41,7 +41,6 @@ class ZKEditor extends SplitPane {
 					textArea.setText(new String(it))
 				]
 			]
-			setStyle("-fx-background-color: red;")
 		]
 		getItems().add(treeview)
 		getItems().add(new VBox(path, textArea, tools))
