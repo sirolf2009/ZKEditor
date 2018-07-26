@@ -5,7 +5,7 @@ A JavaFX editor for zookeeper
 ```xml
 <dependency>
   <groupId>com.sirolf2009</groupId>
-	<artifactId>ZKEditor</artifactId>
+	<artifactId>zkeditor</artifactId>
 	<version>0.0.1</version>
 </dependency>
 ```
