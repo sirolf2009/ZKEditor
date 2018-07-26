@@ -10,6 +10,7 @@
 	
 	<url>https://github.com/sirolf2009/ZKEditor</url>
 
+	<name>ZKEditor</name>
 	<description>An editor for zookeeper</description>
 
 	<licenses>
