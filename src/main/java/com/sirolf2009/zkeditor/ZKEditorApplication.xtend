@@ -18,13 +18,15 @@ class ZKEditorApplication extends Application {
 	}
 
 	override start(Stage primaryStage) throws Exception {
-		val zookeeper = connect(#[promptForIP().orElseThrow[new RuntimeException("I need an IP to connect with")]])
+		val ip = promptForIP().orElseThrow[new RuntimeException("I need an IP to connect with")]
+		val zookeeper = connect(#[ip])
 
 		val scene = new Scene(new ZKEditor(zookeeper), 1200, 600)
 		primaryStage.setOnCloseRequest [
 			zookeeper.close()
 			System.exit(0)
 		]
+		primaryStage.setTitle(ip)
 		primaryStage.setScene(scene)
 		primaryStage.show()
 	}
