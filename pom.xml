@@ -7,6 +7,8 @@
 	<groupId>com.sirolf2009</groupId>
 	<artifactId>zkeditor</artifactId>
 	<version>0.0.1</version>
+	
+	<url>https://github.com/sirolf2009/ZKEditor</url>
 
 	<description>An editor for zookeeper</description>
 
