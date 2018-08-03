@@ -21,9 +21,11 @@ import org.apache.zookeeper.CreateMode
 import org.apache.zookeeper.ZooDefs.Ids
 import org.apache.zookeeper.ZooKeeper
 import org.eclipse.xtend.lib.annotations.Accessors
+import org.apache.zookeeper.KeeperException.NotEmptyException
+import org.apache.zookeeper.ZKUtil
 
 @Accessors class ZookeeperNodes extends TreeViewHierarchy<ZKNode> {
-	
+
 	val StringProperty pathProperty = new SimpleStringProperty()
 	val ObjectProperty<Maybe<byte[]>> valueProperty = new SimpleObjectProperty()
 
@@ -41,9 +43,20 @@ import org.eclipse.xtend.lib.annotations.Accessors
 					setTitle("Confirm Deletion")
 					setHeaderText('''Are you sure you want to delete «node.getValue().getPath()»?''')
 					showAndWait().filter[it == ButtonType.OK].ifPresent [
-						nodes.get(0).getParent(node.getValue()).subscribe [
-							getChildren().remove(node.getValue())
-							zookeeper.delete(node.getValue().getPath(), -1)
+						nodes.get(0).getParent(node.getValue()).subscribe [parent|
+							try {
+								zookeeper.delete(node.getValue().getPath(), -1)
+								parent.getChildren().remove(node.getValue())
+							} catch(NotEmptyException e) {
+								new Alert(AlertType.CONFIRMATION) => [
+									setTitle("Confirm Deletion")
+									setHeaderText('''«node.getValue().getPath()» is not empty. Would you like to delete recursively?''')
+									showAndWait().filter[it == ButtonType.OK].ifPresent[
+										ZKUtil.deleteRecursive(zookeeper, node.getValue().getPath())
+										parent.getChildren().remove(node.getValue())
+									]
+								]
+							}
 						]
 					]
 				]
