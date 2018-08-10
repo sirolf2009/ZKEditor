@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <!-- when using the mode "code", it's important to specify charset utf-8 -->
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+
+    <link href="jsoneditor.min.css" rel="stylesheet" type="text/css">
+    <script src="jsoneditor.min.js"></script>
+</head>
+<body>
+    <div id="jsoneditor" style="width: 100%; height: 100%;"></div>
+
+    <script>
+        // create the editor
+        var container = document.getElementById("jsoneditor");
+        var options = {
+        	mode: 'form',
+        	modes: ['code', 'form', 'text', 'tree', 'view']
+        };
+        var editor = new JSONEditor(container, options);
+    </script>
+</body>
+</html>
