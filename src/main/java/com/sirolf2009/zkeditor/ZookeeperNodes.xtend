@@ -125,13 +125,13 @@ import com.sirolf2009.treeviewhierarchy.change.Subtraction
 	}
 
 	def private static buildTree(ZooKeeper zookeeper) {
-		new ZKNode("/", "/", FXCollections.observableArrayList(zookeeper.getChildren("/", false).map [
+		new ZKNode("/", "/", FXCollections.observableArrayList(zookeeper.getChildren("/", false).sort().map [
 			new ZKNode(it, "/" + it, buildTree(zookeeper, "/" + it))
 		]))
 	}
 
 	def private static ObservableList<ZKNode> buildTree(ZooKeeper zookeeper, String path) {
-		FXCollections.observableArrayList(zookeeper.getChildren(path, false).map [
+		FXCollections.observableArrayList(zookeeper.getChildren(path, false).sort().map [
 			new ZKNode(it, path + "/" + it, buildTree(zookeeper, path + "/" + it))
 		])
 	}
