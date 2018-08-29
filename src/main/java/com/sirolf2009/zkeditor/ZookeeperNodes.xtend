@@ -1,9 +1,13 @@
 package com.sirolf2009.zkeditor
 
 import com.sirolf2009.treeviewhierarchy.TreeViewHierarchy
+import com.sirolf2009.treeviewhierarchy.change.Addition
 import io.reactivex.Maybe
+import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 import java.util.LinkedList
 import java.util.concurrent.atomic.AtomicReference
+import javafx.application.Platform
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
@@ -18,22 +22,48 @@ import javafx.scene.control.MenuItem
 import javafx.scene.control.TextInputDialog
 import javafx.scene.control.TreeItem
 import org.apache.zookeeper.CreateMode
+import org.apache.zookeeper.KeeperException.NotEmptyException
+import org.apache.zookeeper.ZKUtil
 import org.apache.zookeeper.ZooDefs.Ids
 import org.apache.zookeeper.ZooKeeper
 import org.eclipse.xtend.lib.annotations.Accessors
-import org.apache.zookeeper.KeeperException.NotEmptyException
-import org.apache.zookeeper.ZKUtil
+import com.sirolf2009.treeviewhierarchy.change.Subtraction
 
 @Accessors class ZookeeperNodes extends TreeViewHierarchy<ZKNode> {
 
 	val StringProperty pathProperty = new SimpleStringProperty()
 	val ObjectProperty<Maybe<byte[]>> valueProperty = new SimpleObjectProperty()
+	val ObjectProperty<ZooKeeper> zookeeperProperty
 
 	new(ZooKeeper zookeeper) {
 		super(new TreeItem<ZKNode>())
-		val nodes = FXCollections.observableArrayList(zookeeper.buildTree())
-		setItems(nodes)
+		zookeeperProperty = new SimpleObjectProperty(zookeeper)
+		updateItems()
 		setShowRoot(false)
+
+		focusedProperty().addListener [
+			Observable.just(it).subscribeOn(Schedulers.io).map [
+				zookeeperProperty.get().buildTree()
+			].map [
+				FXCollections.observableArrayList(zookeeperProperty.get().buildTree())
+			].map [
+				it.get(0).getDifferencesTo(getItems().get(0))
+			].subscribe [
+				Platform.runLater [
+					forEach[
+						if(it instanceof Addition) {
+							getParent(getItems().get(0), (item as ZKNode).getPath()).subscribe [ parent |
+								parent.getChildren().add((item as ZKNode))
+							]
+						} else if(it instanceof Subtraction) {
+							getParent(getItems().get(0), (item as ZKNode).getPath()).subscribe [ parent |
+								parent.getChildren().remove((item as ZKNode))
+							]
+						}
+					]
+				]
+			]
+		]
 
 		val selectionModel = getSelectionModel()
 		setContextMenu(new ContextMenu(new MenuItem("delete") => [
@@ -43,7 +73,7 @@ import org.apache.zookeeper.ZKUtil
 					setTitle("Confirm Deletion")
 					setHeaderText('''Are you sure you want to delete «node.getValue().getPath()»?''')
 					showAndWait().filter[it == ButtonType.OK].ifPresent [
-						nodes.get(0).getParent(node.getValue()).subscribe [parent|
+						getItems().get(0).getParent(node.getValue()).subscribe [ parent |
 							try {
 								zookeeper.delete(node.getValue().getPath(), -1)
 								parent.getChildren().remove(node.getValue())
@@ -51,7 +81,7 @@ import org.apache.zookeeper.ZKUtil
 								new Alert(AlertType.CONFIRMATION) => [
 									setTitle("Confirm Deletion")
 									setHeaderText('''«node.getValue().getPath()» is not empty. Would you like to delete recursively?''')
-									showAndWait().filter[it == ButtonType.OK].ifPresent[
+									showAndWait().filter[it == ButtonType.OK].ifPresent [
 										ZKUtil.deleteRecursive(zookeeper, node.getValue().getPath())
 										parent.getChildren().remove(node.getValue())
 									]
@@ -90,6 +120,10 @@ import org.apache.zookeeper.ZKUtil
 		]
 	}
 
+	def updateItems() {
+		setItems(FXCollections.observableArrayList(zookeeperProperty.get().buildTree()))
+	}
+
 	def private static buildTree(ZooKeeper zookeeper) {
 		new ZKNode("/", "/", FXCollections.observableArrayList(zookeeper.getChildren("/", false).map [
 			new ZKNode(it, "/" + it, buildTree(zookeeper, "/" + it))
@@ -103,7 +137,11 @@ import org.apache.zookeeper.ZKUtil
 	}
 
 	def private static Maybe<ZKNode> getParent(ZKNode root, ZKNode child) {
-		val segments = new LinkedList(child.path.split("/"))
+		return getParent(root, child.getPath())
+	}
+
+	def private static Maybe<ZKNode> getParent(ZKNode root, String path) {
+		val segments = new LinkedList(path.split("/"))
 		segments.pop()
 		val parent = new AtomicReference(null)
 		val node = new AtomicReference(root)
@@ -117,6 +155,9 @@ import org.apache.zookeeper.ZKUtil
 				}
 			]
 			if(now === node.get()) {
+				if(segments.size() == 1) {
+					return Maybe.just(now)
+				}
 				return Maybe.empty()
 			}
 		}
