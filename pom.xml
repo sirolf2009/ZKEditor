@@ -99,7 +99,7 @@
 		<dependency>
 			<groupId>com.sirolf2009</groupId>
 			<artifactId>treeviewhierarchy</artifactId>
-			<version>0.0.1</version>
+			<version>0.0.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.zookeeper</groupId>
