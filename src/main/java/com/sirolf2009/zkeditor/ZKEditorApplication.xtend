@@ -44,7 +44,7 @@ class ZKEditorApplication extends Application {
 	}
 
 	def static connect(List<String> endPoints) {
-		val connectionLatch = new CountDownLatch(endPoints.size())
+		val connectionLatch = new CountDownLatch(1)
 		val zookeeper = new ZooKeeper(endPoints.join(","), 2000, [
 			if(getState().equals(KeeperState.SyncConnected)) {
 				connectionLatch.countDown()
